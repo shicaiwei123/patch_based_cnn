@@ -1,7 +1,6 @@
 
 
 import numpy as np
-from img_process import get_file_list
 import pickle
 import cv2
 import torch

@@ -15,7 +15,7 @@ import sys
 sys.path.append('../')
 
 from model.patch_based_cnn import net_baesd_patch, my_data_loader
-from patch_based_cnn.utils import train_base, test_base, calc_accuracy
+from utils import train_base, test_base, calc_accuracy
 from config import args
 
 

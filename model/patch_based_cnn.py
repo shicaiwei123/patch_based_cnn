@@ -13,7 +13,7 @@ class net_baesd_patch(nn.Module):
     def __init__(self, args):
         super(net_baesd_patch, self).__init__()
         self.feature = nn.Sequential(
-            nn.Conv2d(3, 50, 5, 1, padding=1),
+            nn.Conv2d(3, 50, 5, 1, padding=2),
             nn.BatchNorm2d(50, affine=True, track_running_stats=True),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -34,7 +34,7 @@ class net_baesd_patch(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
 
             nn.Conv2d(200, 250, 3, 1, padding=1),
-            nn.BatchNorm2d(300, affine=True, track_running_stats=True),
+            nn.BatchNorm2d(250, affine=True, track_running_stats=True),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
@@ -56,6 +56,7 @@ class net_baesd_patch(nn.Module):
 
     def forward(self, x):
         x = self.feature(x)
+        x = x.view(x.shape[0], -1)
         x = self.classifier(x)
         return x
 
@@ -115,26 +116,26 @@ def my_data_loader(train=True, batch_size=100):
     :return: data loader
 
     """
-
+    print("load data...")
     train_transform = ts.Compose(
         [rgb2ycrcb(),
-         ts.ToTensor()])
-         # ts.Normalize(mean=(0.41, 0.46, 0.47,), std=(0.24, 0.24, 0.26))])
+         ts.ToTensor(),
+         ts.Normalize(mean=(0.53, 0.43, 0.59,), std=(0.18, 0.03, 0.04))])
 
     test_transform = ts.Compose(
         [rgb2ycrcb(),
-         ts.ToTensor()])
-         # ts.Normalize(mean=(0.45, 0.48, 0.49,), std=(0.24, 0.24, 0.26))])
+         ts.ToTensor(),
+          ts.Normalize(mean=(0.53, 0.43, 0.59,), std=(0.18, 0.03, 0.04))])
 
     train_data_root = '../data/train'
     test_data_root = '../data/test'
     train_data_set = ImageFolder(train_data_root, transform=train_transform)
     test_data_set = ImageFolder(test_data_root, transform=test_transform)
 
-    train_mean, train_std = get_mean_std(train_data_set)
-    test_mean, test_std = get_mean_std(test_data_set)
-    print("train_mean", train_mean, "train_std", train_std)
-    print("test_mean", test_mean, "test_std", test_std)
+    #train_mean, train_std = get_mean_std(train_data_set)
+    #test_mean, test_std = get_mean_std(test_data_set)
+    #print("train_mean", train_mean, "train_std", train_std)
+    #print("test_mean", test_mean, "test_std", test_std)
 
     if train:
         loader = torch.utils.data.DataLoader(train_data_set, batch_size=batch_size,
@@ -143,4 +144,5 @@ def my_data_loader(train=True, batch_size=100):
 
         loader = torch.utils.data.DataLoader(test_data_set, batch_size=batch_size,
                                              shuffle=False, num_workers=4)
+    print("load finish")
     return loader
