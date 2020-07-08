@@ -16,11 +16,11 @@ retaining 用于解决可能由于意外或者等等情况,训练中途停止了
 '''
 parser = ArgumentParser(description='Pytorch mnist example')
 
-parser.add_argument('--train_epoch', type=int, default=400)
-parser.add_argument('--batch_size', type=int, default=2)
+parser.add_argument('--train_epoch', type=int, default=50)
+parser.add_argument('--batch_size', type=int, default=128)
 parser.add_argument('--lr', type=float, default=0.001)
-parser.add_argument('--lrcos', type=bool, default=True, help='using cosine learning rate decay or not ')
-parser.add_argument('--lr_warmup', type=bool, default=True)
+parser.add_argument('--lrcos', type=bool, default=False, help='using cosine learning rate decay or not ')
+parser.add_argument('--lr_warmup', type=bool, default=False)
 parser.add_argument('--mixup', type=bool, default=False, help='using mixup or not')
 parser.add_argument('--mixup_alpha', type=float, default=0.2)
 parser.add_argument('--weight_decay', type=float, default=1e-4)
