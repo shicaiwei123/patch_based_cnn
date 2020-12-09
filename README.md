@@ -23,7 +23,7 @@ English|[中文](https://github.com/shicaiwei123/patch_based_cnn/blob/master/Rea
 
 # User guide
 - Firstly, run generate.py to divide the living and spoofing img into different patches according to paper and save them as the test set and training set in the data folder. In this section, users need to prepare their own data or public data sets. We did not upload the data. You need to modify the path to your own data path.
-
+- Modify the configuration file: config.py
 - Then train and test.
 
 # Run
