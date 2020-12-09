@@ -2,7 +2,7 @@
 the  implement  of  Face Anti-Spoofing Using Patch and Depth-Based CNNs
 
 
-English|[中文](https://blog.csdn.net/yanxiangyfg/article/details/74990232)
+English|[中文](https://github.com/shicaiwei123/patch_based_cnn/blob/master/ReadMe_CH.md)
 
 # Introduction
 - data
@@ -44,7 +44,7 @@ English|[中文](https://blog.csdn.net/yanxiangyfg/article/details/74990232)
     python patch_cnn_test.py
     ```
 
-# Result()
+# Result
 - the data enhancement such as learning rate decay and mixup has not been used for the follow results.
 
     | Dataset    | Average accuracy(%) |
