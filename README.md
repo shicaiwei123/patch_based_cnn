@@ -1,25 +1,28 @@
 # patch_based_cnn
 the  implement  of  Face Anti-Spoofing Using Patch and Depth-Based CNNs
 
+
+English|[中文](https://blog.csdn.net/yanxiangyfg/article/details/74990232)
+
 # Introduction
 - data
     - The data after dividing into different patchs.
+- lib
+    - Shared basic functions: dataset, data processing and model training 
 - model
     - the code of net
 - output
     - save model and logs
 - src
     - main function and other auxiliary functions
+- test
+    - test a single image, which is used for deployment 
 - config.py
     - parameter configuration
-- utils.py
-    - Shared basic functions
 
-# Logic of code
-- First run generate.py to divide the living and spoofing img into different patchs 
-according to paper and save them as the test set and training set in the data floder.
-In this section, users need to prepare their own data or public data sets.We did not upload the data.
-You need to modify the path to your own data path, and modify the parameters, run four times to get four dataset: living test, living training, spoofing test, spoofing training.   
+
+# User guide
+- Firstly, run generate.py to divide the living and spoofing img into different patches according to paper and save them as the test set and training set in the data folder. In this section, users need to prepare their own data or public data sets. We did not upload the data. You need to modify the path to your own data path.
 
 - Then train and test.
 
@@ -32,7 +35,19 @@ You need to modify the path to your own data path, and modify the parameters, ru
 
 - Train and test
     ```
+    cd src
     python3 patch_cnn_main.py
     ```
+- Single image test. In this section,you can test a single image,which is used for deployment.
+    ```
+    cd test 
+    python patch_cnn_test.py
+    ```
 
+# Result()
+- the data enhancement such as learning rate decay and mixup has not been used for the follow results.
 
+    | Dataset    | Average accuracy(%) |
+    | :----------| --- |
+    | CASIA-FASD |  93.52 |
+    | CASIA-SURF |  88.88 |

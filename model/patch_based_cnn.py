@@ -1,4 +1,3 @@
-
 import torchvision.transforms as ts
 import numpy as np
 import os
@@ -7,6 +6,8 @@ import torch
 from torchvision.datasets import ImageFolder
 import torch.nn.init as init
 import torch.optim as optim
+from lib.processing_utils import get_mean_std
+from lib.img_dataset import ImgBinaryDataset
 
 
 class net_baesd_patch(nn.Module):
@@ -86,17 +87,6 @@ class linear_test(nn.Module):
         return x
 
 
-def get_mean_std(dataset, ratio=1):
-    """Get mean and std by sample ratio
-    """
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=int(len(dataset) * ratio),
-                                             shuffle=True, num_workers=10)
-    train = iter(dataloader).next()[0]  # 一个batch的数据
-    mean = np.mean(train.numpy(), axis=(0, 2, 3))
-    std = np.std(train.numpy(), axis=(0, 2, 3))
-    return mean, std
-
-
 class rgb2ycrcb(object):
     '''
     自定义transform处理,将rgb图像转ycrcb
@@ -109,40 +99,57 @@ class rgb2ycrcb(object):
         return img_new
 
 
-def my_data_loader(train=True, batch_size=100):
+patch_train_transform = ts.Compose(
+    [
+        ts.Resize((96, 96)),
+        rgb2ycrcb(),
+        ts.ToTensor(),
+        # ts.Normalize(mean=(0.56, 0.45, 0.58,), std=(0.18, 0.04, 0.04))  # cross photo
+        # ts.Normalize(mean=(0.52, 0.45, 0.57,), std=(0.17, 0.04, 0.04))  # cross replayed
+        ts.Normalize(mean=(0.44, 0.47, 0.55,), std=(0.15, 0.02, 0.02))  # fasd
+    ])
+
+patch_test_transform = ts.Compose(
+    [
+        ts.Resize((96, 96)),
+        rgb2ycrcb(),
+        ts.ToTensor(),
+        # ts.Normalize(mean=(0.56, 0.45, 0.58,), std=(0.18, 0.04, 0.04)) # cross photo
+        # ts.Normalize(mean=(0.560, 0.46, 0.57,), std=(0.16, 0.04, 0.04))  # cross replayed
+        ts.Normalize(mean=(0.44, 0.47, 0.55,), std=(0.15, 0.02, 0.02))
+    ])
+
+
+def patch_data_loader(args, train=True):
     """
     :param train: train or test fold?
     :param batch_size: batch size, int
     :return: data loader
 
     """
-    print("load data...")
-    train_transform = ts.Compose(
-        [rgb2ycrcb(),
-         ts.ToTensor(),
-         ts.Normalize(mean=(0.53, 0.43, 0.59,), std=(0.18, 0.03, 0.04))])
 
-    test_transform = ts.Compose(
-        [rgb2ycrcb(),
-         ts.ToTensor(),
-          ts.Normalize(mean=(0.53, 0.43, 0.59,), std=(0.18, 0.03, 0.04))])
+    print("load data")
 
-    train_data_root = '../data/train'
-    test_data_root = '../data/test'
-    train_data_set = ImageFolder(train_data_root, transform=train_transform)
-    test_data_set = ImageFolder(test_data_root, transform=test_transform)
+    living_train_dir = os.path.join(args.train_dir, 'living')
+    living_test_dir = os.path.join(args.test_dir, 'living')
+    spoofing_train_dir = os.path.join(args.train_dir, 'spoofing')
+    spoofing_test_dir = os.path.join(args.test_dir, 'spoofing')
 
-    #train_mean, train_std = get_mean_std(train_data_set)
-    #test_mean, test_std = get_mean_std(test_data_set)
-    #print("train_mean", train_mean, "train_std", train_std)
-    #print("test_mean", test_mean, "test_std", test_std)
+    train_data_set = ImgBinaryDataset(living_dir=living_train_dir, spoofing_dir=spoofing_train_dir,
+                                      data_transform=patch_train_transform)
+    test_data_set = ImgBinaryDataset(living_dir=living_test_dir, spoofing_dir=spoofing_test_dir,
+                                     data_transform=patch_test_transform)
+
+    # train_mean, train_std = get_mean_std(train_data_set)
+    # test_mean, test_std = get_mean_std(test_data_set)
+    # print("train_mean", train_mean, "train_std", train_std)
+    # print("test_mean", test_mean, "test_std", test_std)
 
     if train:
-        loader = torch.utils.data.DataLoader(train_data_set, batch_size=batch_size,
+        loader = torch.utils.data.DataLoader(train_data_set, batch_size=args.batch_size,
                                              shuffle=True, num_workers=4)
     else:
 
-        loader = torch.utils.data.DataLoader(test_data_set, batch_size=batch_size,
+        loader = torch.utils.data.DataLoader(test_data_set, batch_size=args.batch_size,
                                              shuffle=False, num_workers=4)
-    print("load finish")
     return loader

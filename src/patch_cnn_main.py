@@ -11,12 +11,17 @@ from torchtoolbox.tools import mixup_data, mixup_criterion
 import os
 import csv
 import sys
+import sys
+import cv2
+import numpy as np
+from PIL import Image
 
 sys.path.append('../')
 
-from model.patch_based_cnn import net_baesd_patch, my_data_loader
-from utils import train_base, test_base, calc_accuracy
+from model.patch_based_cnn import net_baesd_patch, patch_data_loader
+from lib.model_utils import train_base
 from config import args
+
 
 
 def patch_cnn_train():
@@ -27,15 +32,10 @@ def patch_cnn_train():
     de_pooling is True means the pool doesn't using
     :return:
     '''
-    train_loader = my_data_loader(train=True, batch_size=args.batch_size)
-    test_loader = my_data_loader(train=False, batch_size=args.batch_size)
-
-    name = 'patch_baed_cnn'
-    args.log_name = name + '.csv'
-    args.model_name = name + '.pt'
+    train_loader = patch_data_loader(args,train=True)
+    test_loader = patch_data_loader(args,train=False)
 
     model = net_baesd_patch(args=args)
-    # 如果有GPU
     if torch.cuda.is_available():
         model.cuda()  # 将所有的模型参数移动到GPU上
         print("GPU is using")
@@ -51,5 +51,4 @@ def patch_cnn_train():
 
 
 if __name__ == '__main__':
-    # train includes test phase at each epoch
     patch_cnn_train()
