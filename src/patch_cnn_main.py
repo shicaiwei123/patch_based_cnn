@@ -19,7 +19,7 @@ from PIL import Image
 sys.path.append('../')
 
 from model.patch_based_cnn import net_baesd_patch, patch_data_loader
-from lib.model_utils import train_base
+from lib.model_develop_utils import train_base
 from config import args
 
 
