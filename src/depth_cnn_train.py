@@ -8,7 +8,7 @@ import sys
 sys.path.append('../')
 
 from model.depth_based_cnn import net_baesd_depth, depth_data_loader
-from lib.model_develop_utils import train_base
+from lib.model_develop_utils import train_pixel_supervise
 from configuration.config_depth import args
 
 
@@ -31,7 +31,7 @@ def depth_cnn_train(args):
                           momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
 
     args.retrain = False
-    train_base(model=model, cost=criterion, optimizer=optimizer, train_loader=train_loader, test_loader=test_loader,
+    train_pixel_supervise(model=model, cost=criterion, optimizer=optimizer, train_loader=train_loader, test_loader=test_loader,
                args=args)
 
 

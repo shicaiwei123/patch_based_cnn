@@ -224,9 +224,6 @@ def train_base(model, cost, optimizer, train_loader, test_loader, args):
 
             batch_num += 1
 
-            if len(target.size()) == 3:
-                target = torch.unsqueeze(target, dim=1)
-
             if torch.cuda.is_available():
                 data, target = data.cuda(), target.cuda()
 
@@ -267,6 +264,144 @@ def train_base(model, cost, optimizer, train_loader, test_loader, args):
                                                                                         accuracy_test, accuracy_best))
         train_loss = 0
 
+        if args.lrcos:
+            if args.lr_warmup:
+                scheduler_warmup.step(epoch=epoch)
+            else:
+                cos_scheduler.step(epoch=epoch)
+        if epoch < 20:
+            print(epoch, optimizer.param_groups[0]['lr'])
+
+        # save model and para
+        if epoch % save_interval == 0:
+            train_state = {
+                "Epoch": epoch,
+                "model_state": model.state_dict(),
+                "optim_state": optimizer.state_dict(),
+                "args": args
+            }
+            models_dir = args.model_root + '/' + args.name + '.pt'
+            torch.save(train_state, models_dir)
+
+        #  save log
+        with open(log_dir, 'a+', newline='') as f:
+            # 训练结果
+            my_writer = csv.writer(f)
+            my_writer.writerow(log_list)
+            log_list = []
+        epoch = epoch + 1
+    train_duration_sec = int(time.time() - start)
+    print("training is end", train_duration_sec)
+
+
+def train_pixel_supervise(model, cost, optimizer, train_loader, test_loader, args):
+    '''
+
+    :param model:
+    :param cost:
+    :param optimizer:
+    :param train_loader:
+    :param test_loader:
+    :param args:
+    :return:
+    '''
+
+    print(args)
+
+    # Initialize and open timer
+    start = time.time()
+
+    if not os.path.exists(args.model_root):
+        os.makedirs(args.model_root)
+    if not os.path.exists(args.log_root):
+        os.makedirs(args.log_root)
+
+    models_dir = args.model_root + '/' + args.name + '.pt'
+    log_dir = args.log_root + '/' + args.name + '.csv'
+
+    # save args
+    with open(log_dir, 'a+', newline='') as f:
+        my_writer = csv.writer(f)
+        args_dict = vars(args)
+        for key, value in args_dict.items():
+            my_writer.writerow([key, value])
+        f.close()
+
+    # Cosine learning rate decay
+    if args.lrcos:
+        print("lrcos is using")
+        cos_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.train_epoch, eta_min=0)
+
+        if args.lr_warmup:
+            scheduler_warmup = GradualWarmupScheduler(args, optimizer, multiplier=1,
+                                                      after_scheduler=cos_scheduler)
+
+    # Training initialization
+    epoch_num = args.train_epoch
+    log_interval = args.log_interval
+    save_interval = args.save_interval
+    batch_num = 0
+    train_loss = 0
+    epoch = 0
+    loss_best = 1e4
+    log_list = []  # log need to save
+
+    if args.retrain:
+        if not os.path.exists(models_dir):
+            print("no trained model")
+        else:
+            state_read = torch.load(models_dir)
+            model.load_state_dict(state_read['model_state'])
+            optimizer.load_state_dict(state_read['optim_state'])
+            epoch = state_read['Epoch']
+            print("retaining")
+
+    # Train
+    while epoch < epoch_num:
+        for batch_idx, (data, target) in enumerate(
+                tqdm(train_loader, desc="Epoch {}/{}".format(epoch, epoch_num))):
+
+            batch_num += 1
+
+            target = torch.unsqueeze(target, dim=1)
+
+            if torch.cuda.is_available():
+                data, target = data.cuda(), target.cuda()
+
+            if args.mixup:
+                mixup_alpha = args.mixup_alpha
+                inputs, labels_a, labels_b, lam = mixup_data(data, target, alpha=mixup_alpha)
+
+            optimizer.zero_grad()
+
+            output = model(data)
+
+            if args.mixup:
+                loss = mixup_criterion(cost, output, labels_a, labels_b, lam)
+            else:
+                loss = cost(output, target)
+
+            train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+            # if batch_idx % log_interval == 0:  # 准备打印相关信息，args.log_interval是最开头设置的好了的参数
+            #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            #         epoch, batch_idx * len(data), len(train_loader.dataset),
+            #                100. * batch_idx / len(train_loader), loss.item()))
+
+        # testing
+        # no testing the result of mse is also the evluaate factor for depth estimate
+        if train_loss / len(train_loader) < loss_best:
+            loss_best = train_loss / len(train_loader)
+            save_path = args.model_root + args.name + '.pth'
+            torch.save(model.state_dict(), save_path)
+        log_list.append(train_loss / len(train_loader))
+
+        print(
+            "Epoch {}, loss={:.5f}".format(epoch,
+                                           train_loss / len(train_loader),
+                                           ))
+        train_loss = 0
         if args.lrcos:
             if args.lr_warmup:
                 scheduler_warmup.step(epoch=epoch)
