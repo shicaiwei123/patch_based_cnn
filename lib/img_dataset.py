@@ -37,8 +37,7 @@ class ImgBinaryDataset(Dataset):
 
         # 确定label
         img_path_split = img_path.split('/')
-        img_type = img_path_split[-3]
-        if img_type == 'spoofing':
+        if img_path_split[-3] == 'spoofing' or img_path_split[-2]=='spoofing':
             label = 0
         else:
             label = 1
@@ -81,7 +80,7 @@ class ImgPixelDataset(Dataset):
         # 确定label
         img_path_split = img_path.split('/')
         img_type = img_path_split[-3]
-        if img_type == 'spoofing':
+        if img_path_split[-3] == 'spoofing' or img_path_split[-2]=='spoofing':
             label = np.float32(np.zeros((self.pixel_size, self.pixel_size)))
         else:
             label = np.float32(np.ones((self.pixel_size, self.pixel_size)))
