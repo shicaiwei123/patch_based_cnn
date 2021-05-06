@@ -6,10 +6,10 @@ import torch
 
 sys.path.append('../')
 
-from model.patch_based_cnn import net_baesd_patch, patch_data_loader, patch_test_transform
+from model.patch_based_cnn import net_baesd_patch, patch_test_transform
 from lib.processing_utils import get_file_list, FaceDection
-from lib.model_utils import deploy_base
-from config import args
+from lib.model_develop_utils import deploy_base
+from configuration.config_patch import args
 import torchvision.transforms as ts
 import datetime
 

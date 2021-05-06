@@ -25,8 +25,6 @@ import os
 from sklearn.manifold import TSNE
 
 
-
-
 def calc_accuracy(model, loader, verbose=False, hter=False):
     """
     :param model: model network
@@ -179,8 +177,8 @@ def train_base(model, cost, optimizer, train_loader, test_loader, args):
     if not os.path.exists(args.log_root):
         os.makedirs(args.log_root)
 
-    models_dir = args.model_root + '/' + args.name +'.pt'
-    log_dir = args.log_root + '/' + args.name +'.csv'
+    models_dir = args.model_root + '/' + args.name + '.pt'
+    log_dir = args.log_root + '/' + args.name + '.csv'
 
     # save args
     with open(log_dir, 'a+', newline='') as f:
@@ -225,6 +223,10 @@ def train_base(model, cost, optimizer, train_loader, test_loader, args):
                 tqdm(train_loader, desc="Epoch {}/{}".format(epoch, epoch_num))):
 
             batch_num += 1
+
+            if len(target.size()) == 3:
+                target = torch.unsqueeze(target, dim=1)
+
             if torch.cuda.is_available():
                 data, target = data.cuda(), target.cuda()
 
@@ -281,7 +283,7 @@ def train_base(model, cost, optimizer, train_loader, test_loader, args):
                 "optim_state": optimizer.state_dict(),
                 "args": args
             }
-            models_dir = args.model_root + '/' + args.name +'.pt'
+            models_dir = args.model_root + '/' + args.name + '.pt'
             torch.save(train_state, models_dir)
 
         #  save log

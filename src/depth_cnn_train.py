@@ -7,26 +7,25 @@ import sys
 
 sys.path.append('../')
 
-from model.patch_based_cnn import net_baesd_patch, patch_data_loader
+from model.depth_based_cnn import net_baesd_depth, depth_data_loader
 from lib.model_develop_utils import train_base
-from configuration.config_patch import args
+from configuration.config_depth import args
 
 
-
-def patch_cnn_train(args):
+def depth_cnn_train(args):
     '''
 
     :return:
     '''
-    train_loader = patch_data_loader(args,train=True)
-    test_loader = patch_data_loader(args,train=False)
+    train_loader = depth_data_loader(args, train=True)
+    test_loader = depth_data_loader(args, train=False)
 
-    model = net_baesd_patch(args=args)
+    model = net_baesd_depth()
     if torch.cuda.is_available():
         model.cuda()  # 将所有的模型参数移动到GPU上
         print("GPU is using")
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.MSELoss()
 
     optimizer = optim.SGD(filter(lambda param: param.requires_grad, model.parameters()), lr=args.lr,
                           momentum=args.momentum, weight_decay=args.weight_decay, nesterov=True)
@@ -37,4 +36,4 @@ def patch_cnn_train(args):
 
 
 if __name__ == '__main__':
-    patch_cnn_train(args)
+    depth_cnn_train(args)
