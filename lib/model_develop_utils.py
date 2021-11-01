@@ -23,6 +23,7 @@ import time
 import matplotlib.pyplot as plt
 import os
 from sklearn.manifold import TSNE
+import torch.nn as nn
 
 
 def calc_accuracy(model, loader, verbose=False, hter=False):
@@ -88,6 +89,32 @@ def calc_accuracy(model, loader, verbose=False, hter=False):
         return [accuracy, FAR, FRR, HTER]
     else:
         return [accuracy]
+
+
+def calc_accuracy_pixel(model, loader, verbose=False, hter=False):
+    """
+    :param model: model network
+    :param loader: torch.utils.data.DataLoader
+    :param verbose: show progress bar, bool
+    :return accuracy, float
+    """
+    mode_saved = model.training
+    measure = nn.MSELoss()
+    measure_loss = 0
+    model.train(False)
+    use_cuda = torch.cuda.is_available()
+    if use_cuda:
+        model.cuda()
+    for inputs, labels in tqdm(iter(loader), desc="Full forward pass", total=len(loader), disable=not verbose):
+        if use_cuda:
+            inputs = inputs.cuda()
+            labels = labels.cuda()
+        with torch.no_grad():
+            outputs_batch = model(inputs)
+        measure_loss += measure(outputs_batch, labels)
+    model.train(mode_saved)
+
+    return measure_loss / len(loader)
 
 
 class GradualWarmupScheduler(_LRScheduler):
@@ -316,7 +343,7 @@ def train_pixel_supervise(model, cost, optimizer, train_loader, test_loader, arg
     if not os.path.exists(args.log_root):
         os.makedirs(args.log_root)
 
-    models_dir = args.model_root + '/' + args.name + '.pt'
+    models_dir = args.model_root + '/' + args.name + '.pth'
     log_dir = args.log_root + '/' + args.name + '.csv'
 
     # save args
@@ -391,9 +418,10 @@ def train_pixel_supervise(model, cost, optimizer, train_loader, test_loader, arg
 
         # testing
         # no testing the result of mse is also the evluaate factor for depth estimate
+
         if train_loss / len(train_loader) < loss_best:
             loss_best = train_loss / len(train_loader)
-            save_path = args.model_root + args.name + '.pth'
+            save_path = os.path.join(args.model_root,args.name + '.pth')
             torch.save(model.state_dict(), save_path)
         log_list.append(train_loss / len(train_loader))
 
@@ -501,8 +529,6 @@ def deploy_base(model, img, transform):
     if use_cuda:
         result = result.cpu()
     result = result.detach().numpy()
-    result = result[0]
-
     return result
 
 

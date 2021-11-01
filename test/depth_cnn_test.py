@@ -46,10 +46,15 @@ def depth_cnn_single(model, face_detector, img, isface):
     if face_img is None:
         return None
 
-    result = deploy_base(model=model, img=face_img, transform=depth_test_transform)
-    # print(result_one)
+    face_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB)
+    face_img_pil = Image.fromarray(face_img)
 
-    if result[0] > result[1]:
+    result = deploy_base(model=model, img=face_img_pil, transform=depth_test_transform)
+
+    result_mean = np.mean(result)
+    print(result_mean)
+
+    if result_mean < 0.5:
         return 0
     else:
         return 1
@@ -98,9 +103,9 @@ def depth_cnn_test(pre_path, test_dir, label, isface):
 
 
 if __name__ == '__main__':
-    test_dir = "/home/shicaiwei/data/liveness_data/CASIA-FASD/test/spoofing"
+    test_dir = "/home/shicaiwei/data/liveness_data/CASIA-FASD/test/living"
     label = 0
-    pre_path = "../output/models/depth_fasd.pth"
+    pre_path = "../output/models/depth_patch.pth"
     isface = True
-    depth_cnn_test(args, pre_path=pre_path, test_dir=test_dir, label=label,
+    depth_cnn_test(pre_path=pre_path, test_dir=test_dir, label=label,
                    isface=isface)

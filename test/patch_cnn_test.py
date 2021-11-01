@@ -91,7 +91,7 @@ def patch_cnn_single(model, face_detector, img, isface):
             img_patch = img_transform(img_Image)
 
             result_one = deploy_base(model=model, img=img_patch, transform=patch_test_transform)
-            # print(result_one)
+            result_one=result_one[0]
 
             if result_one[0] > result_one[1]:
                 false_count += 1
